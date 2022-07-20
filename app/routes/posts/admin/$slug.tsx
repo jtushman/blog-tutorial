@@ -1,7 +1,7 @@
 import { ActionFunction, json, LoaderArgs, redirect } from "@remix-run/node";
 import invariant from "tiny-invariant";
 import { createPost, deletePost, getPost, updatePost } from "~/models/post.server";
-import { Form, useActionData, useLoaderData, useTransition } from "@remix-run/react";
+import { Form, useActionData, useCatch, useLoaderData, useParams, useTransition } from "@remix-run/react";
 
 type ActionData =
   | {
@@ -13,6 +13,7 @@ type ActionData =
 const inputClassName = `w-full rounded border border-gray-500 px-2 py-1 text-lg`;
 
 export const loader = async ({ params }: LoaderArgs) => {
+  
   invariant(params.slug, `slug is required`)
 
   if(params.slug === "new") {
@@ -83,7 +84,6 @@ export const action: ActionFunction = async({request, params}) => {
 
 
 }
-
 
 export default function NewPostRoute() {
 
@@ -171,6 +171,32 @@ export default function NewPostRoute() {
       </Form>
   )
 
+}
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  const params = useParams();
+  if (caught.status === 404) {
+    return (
+      <div className="text-red-500">
+        Uh oh! The post with the slug "{params.slug}" does not exist!
+      </div>
+    );
+  }
+  throw new Error(`Unsupported thrown response status code: ${caught.status}`);
+}
+
+
+export function ErrorBoundary({ error }: { error: unknown }) {
+  if (error instanceof Error) {
+    return (
+      <div className="text-red-500">
+        Oh no, something went wrong!
+        <pre>{error.message}</pre>
+      </div>
+    );
+  }
+  return <div className="text-red-500">Oh no, something went wrong!</div>;
 }
 
 
